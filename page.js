@@ -593,7 +593,8 @@ let main = {
             main.methods.togglehighlight(main.variables.highlighted);
             main.variables.highlighted = [];
             main.variables.selectedpiece = '';            
-            $('#turn').removeClass('turnhighlight turnheightlight check checkmate');
+            $('#turn').removeClass('turnhighlight turnheightlight check checkmate draw');
+
             if (main.variables.turn == 'w') {
                 main.variables.turn = 'b';                
                 let inCheck = main.methods.isInCheck('b');
@@ -608,15 +609,29 @@ let main = {
                         return;
                     } else {
                         $('#turn').html("Black is in CHECK!");
-                        $('#turn').addClass('check');                        
+                        $('#turn').addClass('check');
                         return;
                     }
+                }                
+                let drawType = main.methods.checkForDraw('b');
+                if (drawType) {
+                    let messages = {
+                        'stalemate': "DRAW! Stalemate!",
+                        'insufficient_material': "DRAW! Insufficient Material!",
+                        'fifty_move': "DRAW! Fifty-Move Rule!",
+                        'threefold_repetition': "DRAW! Threefold Repetition!"
+                    };
+                    $('#turn').html(messages[drawType] || "DRAW!");
+                    $('#turn').addClass('draw');
+                    main.variables.gameOver = true;
+                    return;
                 }                
                 $('#turn').html("It's Blacks Turn");
                 $('#turn').addClass('turnhighlight');
                 setTimeout(function () {
                     $('#turn').removeClass('turnhighlight');
                 }, 1500);
+
             } else if (main.variables.turn == 'b') {
                 main.variables.turn = 'w';                
                 let inCheck = main.methods.isInCheck('w');
@@ -631,10 +646,22 @@ let main = {
                     } else {
                         $('#turn').html("White is in CHECK!");
                         $('#turn').addClass('check');
-                        // Keep the check styling visible
                         return;
                     }
-                }
+                }                
+                let drawType = main.methods.checkForDraw('w');
+                if (drawType) {
+                    let messages = {
+                        'stalemate': "DRAW! Stalemate!",
+                        'insufficient_material': "DRAW! Insufficient Material!",
+                        'fifty_move': "DRAW! Fifty-Move Rule!",
+                        'threefold_repetition': "DRAW! Threefold Repetition!"
+                    };
+                    $('#turn').html(messages[drawType] || "DRAW!");
+                    $('#turn').addClass('draw');
+                    main.variables.gameOver = true;
+                    return;
+                }                
                 $('#turn').html("It's Whites Turn");
                 $('#turn').addClass('turnhighlight');
                 setTimeout(function () {
@@ -935,6 +962,7 @@ let main = {
             }
             return true;
         },
+
         getLegalMovesForPiece: function (pieceName) {
             let savedHighlighted = main.variables.highlighted.slice();
             let savedSelected = main.variables.selectedpiece;
@@ -947,6 +975,132 @@ let main = {
             return moves;
         },
 
+        isStalemate: function (color) {
+            if (main.methods.isInCheck(color)) {
+                return false;
+            }
+            let pieces = [];
+            for (let pieceName in main.variables.pieces) {
+                let piece = main.variables.pieces[pieceName];
+                if (!piece.captured && piece.type.slice(0, 1) === color) {
+                    pieces.push(pieceName);
+                }
+            }
+            for (let i = 0; i < pieces.length; i++) {
+                let pieceName = pieces[i];
+                let moves = main.methods.getLegalMovesForPiece(pieceName);
+                if (moves && moves.length > 0) {
+                    return false;
+                }
+            }
+            return true;
+        },
+
+        isInsufficientMaterial: function () {
+            let pieces = [];
+            let pieceCount = 0;
+            for (let pieceName in main.variables.pieces) {
+                let piece = main.variables.pieces[pieceName];
+                if (!piece.captured) {
+                    pieces.push(piece);
+                    pieceCount++;
+                }
+            }
+            if (pieceCount === 2) {
+                return true;
+            }
+            if (pieceCount === 3) {
+                let bishopCount = 0;
+                for (let piece of pieces) {
+                    if (piece.type.includes('bishop')) {
+                        bishopCount++;
+                    }
+                }
+                if (bishopCount === 1) {
+                    return true;
+                }
+            }
+            if (pieceCount === 3) {
+                let knightCount = 0;
+                for (let piece of pieces) {
+                    if (piece.type.includes('knight')) {
+                        knightCount++;
+                    }
+                }
+                if (knightCount === 1) {
+                    return true;
+                }
+            }
+            if (pieceCount === 4) {
+                let bishops = [];
+                for (let piece of pieces) {
+                    if (piece.type.includes('bishop')) {
+                        bishops.push(piece);
+                    }
+                }
+                if (bishops.length === 2) {
+                    let pos1 = bishops[0].position.split('_');
+                    let pos2 = bishops[1].position.split('_');
+                    let color1 = (parseInt(pos1[0]) + parseInt(pos1[1])) % 2;
+                    let color2 = (parseInt(pos2[0]) + parseInt(pos2[1])) % 2;
+                    if (color1 === color2) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        },
+
+        isFiftyMoveDraw: function () {
+            if (main.variables.halfMoveClock >= 100) {
+                return true;
+            }
+            return false;
+        },
+
+        isThreefoldRepetition: function () {
+            if (!main.variables.positionHistory) {
+                main.variables.positionHistory = [];
+            }
+            let currentHash = main.methods.getPositionHash();
+            let count = 0;
+            for (let hash of main.variables.positionHistory) {
+                if (hash === currentHash) {
+                    count++;
+                    if (count >= 3) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        },
+
+        getPositionHash: function () {
+            let hash = '';
+            for (let pieceName in main.variables.pieces) {
+                let piece = main.variables.pieces[pieceName];
+                if (!piece.captured) {
+                    hash += pieceName + ':' + piece.position + '|';
+                }
+            }
+            hash += 'turn:' + main.variables.turn;
+            return hash;
+        },
+        checkForDraw: function (color) {
+            if (main.methods.isStalemate(color)) {
+                return 'stalemate';
+            }
+            if (main.methods.isInsufficientMaterial()) {
+                return 'insufficient_material';
+            }
+            if (main.methods.isFiftyMoveDraw()) {
+                return 'fifty_move';
+            }
+            if (main.methods.isThreefoldRepetition()) {
+                return 'threefold_repetition';
+            }
+            return false;
+        },
     }
 };
 
