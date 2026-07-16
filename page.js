@@ -230,33 +230,33 @@ let main = {
                 type: 'b_pawn',
                 moved: false
             }
-
         }
     },
     methods: {
         gamesetup: function () {
             $('.cell').attr('chess', 'null');
             for (let gamepiece in main.variables.pieces) {
-                $('#' + main.variables.pieces[gamepiece].position).html(main.variables.pieces[gamepiece].img);
-                $('#' + main.variables.pieces[gamepiece].position).attr('chess', gamepiece);
+                if (!main.variables.pieces[gamepiece].captured) {
+                    if (main.variables.pieces[gamepiece].position) {
+                        $('#' + main.variables.pieces[gamepiece].position).html(main.variables.pieces[gamepiece].img);
+                        $('#' + main.variables.pieces[gamepiece].position).attr('chess', gamepiece);
+                    }
+                }
             }
         },
         moveoptions: function (selectedpiece) {
             let position = { x: '', y: '' };
             position.x = main.variables.pieces[selectedpiece].position.split('_')[0];
-            position.y = main.variables.pieces[selectedpiece].position.split('_')[1];            
+            position.y = main.variables.pieces[selectedpiece].position.split('_')[1];
             var options = [];
             var coordinates = [];
             var startpoint = main.variables.pieces[selectedpiece].position;
             var c1, c2, c3, c4, c5, c6, c7, c8;
-
             if (main.variables.highlighted.length != 0) {
                 main.methods.togglehighlight(main.variables.highlighted);
             }
-
             switch (main.variables.pieces[selectedpiece].type) {
                 case 'w_king':
-
                     if ($('#6_1').attr('chess') == 'null' && $('#7_1').attr('chess') == 'null' && main.variables.pieces['w_king'].moved == false && main.variables.pieces['w_rook2'].moved == false) {
                         coordinates = [{ x: 1, y: 1 }, { x: 1, y: 0 }, { x: 1, y: -1 }, { x: 0, y: -1 }, { x: -1, y: -1 }, { x: -1, y: 0 }, { x: -1, y: 1 }, { x: 0, y: 1 }, { x: 2, y: 0 }].map(function (val) {
                             return (parseInt(position.x) + parseInt(val.x)) + '_' + (parseInt(position.y) + parseInt(val.y));
@@ -266,14 +266,11 @@ let main = {
                             return (parseInt(position.x) + parseInt(val.x)) + '_' + (parseInt(position.y) + parseInt(val.y));
                         });
                     }
-
                     options = (main.methods.options(startpoint, coordinates, main.variables.pieces[selectedpiece].type)).slice(0);
                     main.variables.highlighted = options.slice(0);
                     main.methods.togglehighlight(options);
-
                     break;
                 case 'b_king':
-
                     if ($('#6_8').attr('chess') == 'null' && $('#7_8').attr('chess') == 'null' && main.variables.pieces['b_king'].moved == false && main.variables.pieces['b_rook2'].moved == false) {
                         coordinates = [{ x: 1, y: 1 }, { x: 1, y: 0 }, { x: 1, y: -1 }, { x: 0, y: -1 }, { x: -1, y: -1 }, { x: -1, y: 0 }, { x: -1, y: 1 }, { x: 0, y: 1 }, { x: 2, y: 0 }].map(function (val) {
                             return (parseInt(position.x) + parseInt(val.x)) + '_' + (parseInt(position.y) + parseInt(val.y));
@@ -286,10 +283,8 @@ let main = {
                     options = (main.methods.options(startpoint, coordinates, main.variables.pieces[selectedpiece].type)).slice(0);
                     main.variables.highlighted = options.slice(0);
                     main.methods.togglehighlight(options);
-
                     break;
                 case 'w_queen':
-
                     c1 = main.methods.w_options(position, [{ x: 1, y: 1 }, { x: 2, y: 2 }, { x: 3, y: 3 }, { x: 4, y: 4 }, { x: 5, y: 5 }, { x: 6, y: 6 }, { x: 7, y: 7 }]);
                     c2 = main.methods.w_options(position, [{ x: 1, y: -1 }, { x: 2, y: -2 }, { x: 3, y: -3 }, { x: 4, y: -4 }, { x: 5, y: -5 }, { x: 6, y: -6 }, { x: 7, y: -7 }]);
                     c3 = main.methods.w_options(position, [{ x: -1, y: 1 }, { x: -2, y: 2 }, { x: -3, y: 3 }, { x: -4, y: 4 }, { x: -5, y: 5 }, { x: -6, y: 6 }, { x: -7, y: 7 }]);
@@ -298,16 +293,12 @@ let main = {
                     c6 = main.methods.w_options(position, [{ x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 4 }, { x: 0, y: 5 }, { x: 0, y: 6 }, { x: 0, y: 7 }]);
                     c7 = main.methods.w_options(position, [{ x: -1, y: 0 }, { x: -2, y: 0 }, { x: -3, y: 0 }, { x: -4, y: 0 }, { x: -5, y: 0 }, { x: -6, y: 0 }, { x: -7, y: 0 }]);
                     c8 = main.methods.w_options(position, [{ x: 0, y: -1 }, { x: 0, y: -2 }, { x: 0, y: -3 }, { x: 0, y: -4 }, { x: 0, y: -5 }, { x: 0, y: -6 }, { x: 0, y: -7 }]);
-
                     coordinates = c1.concat(c2).concat(c3).concat(c4).concat(c5).concat(c6).concat(c7).concat(c8);
-
                     options = coordinates.slice(0);
                     main.variables.highlighted = options.slice(0);
                     main.methods.togglehighlight(options);
-
                     break;
                 case 'b_queen':
-
                     c1 = main.methods.b_options(position, [{ x: 1, y: 1 }, { x: 2, y: 2 }, { x: 3, y: 3 }, { x: 4, y: 4 }, { x: 5, y: 5 }, { x: 6, y: 6 }, { x: 7, y: 7 }]);
                     c2 = main.methods.b_options(position, [{ x: 1, y: -1 }, { x: 2, y: -2 }, { x: 3, y: -3 }, { x: 4, y: -4 }, { x: 5, y: -5 }, { x: 6, y: -6 }, { x: 7, y: -7 }]);
                     c3 = main.methods.b_options(position, [{ x: -1, y: 1 }, { x: -2, y: 2 }, { x: -3, y: 3 }, { x: -4, y: 4 }, { x: -5, y: 5 }, { x: -6, y: 6 }, { x: -7, y: 7 }]);
@@ -316,241 +307,174 @@ let main = {
                     c6 = main.methods.b_options(position, [{ x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 4 }, { x: 0, y: 5 }, { x: 0, y: 6 }, { x: 0, y: 7 }]);
                     c7 = main.methods.b_options(position, [{ x: -1, y: 0 }, { x: -2, y: 0 }, { x: -3, y: 0 }, { x: -4, y: 0 }, { x: -5, y: 0 }, { x: -6, y: 0 }, { x: -7, y: 0 }]);
                     c8 = main.methods.b_options(position, [{ x: 0, y: -1 }, { x: 0, y: -2 }, { x: 0, y: -3 }, { x: 0, y: -4 }, { x: 0, y: -5 }, { x: 0, y: -6 }, { x: 0, y: -7 }]);
-
                     coordinates = c1.concat(c2).concat(c3).concat(c4).concat(c5).concat(c6).concat(c7).concat(c8);
-
                     options = coordinates.slice(0);
                     main.variables.highlighted = options.slice(0);
                     main.methods.togglehighlight(options);
-
                     break;
-
                 case 'w_bishop':
-
                     c1 = main.methods.w_options(position, [{ x: 1, y: 1 }, { x: 2, y: 2 }, { x: 3, y: 3 }, { x: 4, y: 4 }, { x: 5, y: 5 }, { x: 6, y: 6 }, { x: 7, y: 7 }]);
                     c2 = main.methods.w_options(position, [{ x: 1, y: -1 }, { x: 2, y: -2 }, { x: 3, y: -3 }, { x: 4, y: -4 }, { x: 5, y: -5 }, { x: 6, y: -6 }, { x: 7, y: -7 }]);
                     c3 = main.methods.w_options(position, [{ x: -1, y: 1 }, { x: -2, y: 2 }, { x: -3, y: 3 }, { x: -4, y: 4 }, { x: -5, y: 5 }, { x: -6, y: 6 }, { x: -7, y: 7 }]);
                     c4 = main.methods.w_options(position, [{ x: -1, y: -1 }, { x: -2, y: -2 }, { x: -3, y: -3 }, { x: -4, y: -4 }, { x: -5, y: -5 }, { x: -6, y: -6 }, { x: -7, y: -7 }]);
-
                     coordinates = c1.concat(c2).concat(c3).concat(c4);
-
                     options = coordinates.slice(0);
                     main.variables.highlighted = options.slice(0);
                     main.methods.togglehighlight(options);
-
                     break;
-
                 case 'b_bishop':
-
                     c1 = main.methods.b_options(position, [{ x: 1, y: 1 }, { x: 2, y: 2 }, { x: 3, y: 3 }, { x: 4, y: 4 }, { x: 5, y: 5 }, { x: 6, y: 6 }, { x: 7, y: 7 }]);
                     c2 = main.methods.b_options(position, [{ x: 1, y: -1 }, { x: 2, y: -2 }, { x: 3, y: -3 }, { x: 4, y: -4 }, { x: 5, y: -5 }, { x: 6, y: -6 }, { x: 7, y: -7 }]);
                     c3 = main.methods.b_options(position, [{ x: -1, y: 1 }, { x: -2, y: 2 }, { x: -3, y: 3 }, { x: -4, y: 4 }, { x: -5, y: 5 }, { x: -6, y: 6 }, { x: -7, y: 7 }]);
                     c4 = main.methods.b_options(position, [{ x: -1, y: -1 }, { x: -2, y: -2 }, { x: -3, y: -3 }, { x: -4, y: -4 }, { x: -5, y: -5 }, { x: -6, y: -6 }, { x: -7, y: -7 }]);
-
                     coordinates = c1.concat(c2).concat(c3).concat(c4);
-
                     options = coordinates.slice(0);
                     main.variables.highlighted = options.slice(0);
                     main.methods.togglehighlight(options);
                     break;
                 case 'w_knight':
-
                     coordinates = [{ x: -1, y: 2 }, { x: 1, y: 2 }, { x: 1, y: -2 }, { x: -1, y: -2 }, { x: 2, y: 1 }, { x: 2, y: -1 }, { x: -2, y: -1 }, { x: -2, y: 1 }].map(function (val) {
                         return (parseInt(position.x) + parseInt(val.x)) + '_' + (parseInt(position.y) + parseInt(val.y));
                     });
-
                     options = (main.methods.options(startpoint, coordinates, main.variables.pieces[selectedpiece].type)).slice(0);
                     main.variables.highlighted = options.slice(0);
                     main.methods.togglehighlight(options);
-
                     break;
                 case 'b_knight':
-
                     coordinates = [{ x: -1, y: 2 }, { x: 1, y: 2 }, { x: 1, y: -2 }, { x: -1, y: -2 }, { x: 2, y: 1 }, { x: 2, y: -1 }, { x: -2, y: -1 }, { x: -2, y: 1 }].map(function (val) {
                         return (parseInt(position.x) + parseInt(val.x)) + '_' + (parseInt(position.y) + parseInt(val.y));
                     });
-
                     options = (main.methods.options(startpoint, coordinates, main.variables.pieces[selectedpiece].type)).slice(0);
                     main.variables.highlighted = options.slice(0);
                     main.methods.togglehighlight(options);
-
                     break;
                 case 'w_rook':
-
                     c1 = main.methods.w_options(position, [{ x: 1, y: 0 }, { x: 2, y: 0 }, { x: 3, y: 0 }, { x: 4, y: 0 }, { x: 5, y: 0 }, { x: 6, y: 0 }, { x: 7, y: 0 }]);
                     c2 = main.methods.w_options(position, [{ x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 4 }, { x: 0, y: 5 }, { x: 0, y: 6 }, { x: 0, y: 7 }]);
                     c3 = main.methods.w_options(position, [{ x: -1, y: 0 }, { x: -2, y: 0 }, { x: -3, y: 0 }, { x: -4, y: 0 }, { x: -5, y: 0 }, { x: -6, y: 0 }, { x: -7, y: 0 }]);
                     c4 = main.methods.w_options(position, [{ x: 0, y: -1 }, { x: 0, y: -2 }, { x: 0, y: -3 }, { x: 0, y: -4 }, { x: 0, y: -5 }, { x: 0, y: -6 }, { x: 0, y: -7 }]);
-
                     coordinates = c1.concat(c2).concat(c3).concat(c4);
-
                     options = coordinates.slice(0);
                     main.variables.highlighted = options.slice(0);
                     main.methods.togglehighlight(options);
-
                     break;
                 case 'b_rook':
-
                     c1 = main.methods.b_options(position, [{ x: 1, y: 0 }, { x: 2, y: 0 }, { x: 3, y: 0 }, { x: 4, y: 0 }, { x: 5, y: 0 }, { x: 6, y: 0 }, { x: 7, y: 0 }]);
                     c2 = main.methods.b_options(position, [{ x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }, { x: 0, y: 4 }, { x: 0, y: 5 }, { x: 0, y: 6 }, { x: 0, y: 7 }]);
                     c3 = main.methods.b_options(position, [{ x: -1, y: 0 }, { x: -2, y: 0 }, { x: -3, y: 0 }, { x: -4, y: 0 }, { x: -5, y: 0 }, { x: -6, y: 0 }, { x: -7, y: 0 }]);
                     c4 = main.methods.b_options(position, [{ x: 0, y: -1 }, { x: 0, y: -2 }, { x: 0, y: -3 }, { x: 0, y: -4 }, { x: 0, y: -5 }, { x: 0, y: -6 }, { x: 0, y: -7 }]);
-
                     coordinates = c1.concat(c2).concat(c3).concat(c4);
-
                     options = coordinates.slice(0);
                     main.variables.highlighted = options.slice(0);
                     main.methods.togglehighlight(options);
-
                     break;
                 case 'w_pawn':
-
                     if (main.variables.pieces[selectedpiece].moved == false) {
-
                         coordinates = [{ x: 0, y: 1 }, { x: 0, y: 2 }, { x: 1, y: 1 }, { x: -1, y: 1 }].map(function (val) {
                             return (parseInt(position.x) + parseInt(val.x)) + '_' + (parseInt(position.y) + parseInt(val.y));
                         });
-
                     }
                     else if (main.variables.pieces[selectedpiece].moved == true) {
-
                         coordinates = [{ x: 0, y: 1 }, { x: 1, y: 1 }, { x: -1, y: 1 }].map(function (val) {
                             return (parseInt(position.x) + parseInt(val.x)) + '_' + (parseInt(position.y) + parseInt(val.y));
                         });
-
                     }
-
                     options = (main.methods.options(startpoint, coordinates, main.variables.pieces[selectedpiece].type)).slice(0);
                     main.variables.highlighted = options.slice(0);
                     main.methods.togglehighlight(options);
-
                     break;
-
-                case 'b_pawn':                    
+                case 'b_pawn':
                     if (main.variables.pieces[selectedpiece].moved == false) {
                         coordinates = [{ x: 0, y: -1 }, { x: 0, y: -2 }, { x: 1, y: -1 }, { x: -1, y: -1 }].map(function (val) {
                             return (parseInt(position.x) + parseInt(val.x)) + '_' + (parseInt(position.y) + parseInt(val.y));
                         });
-
                     }
                     else if (main.variables.pieces[selectedpiece].moved == true) {
                         coordinates = [{ x: 0, y: -1 }, { x: 1, y: -1 }, { x: -1, y: -1 }].map(function (val) {
                             return (parseInt(position.x) + parseInt(val.x)) + '_' + (parseInt(position.y) + parseInt(val.y));
                         });
-
                     }
-
                     options = (main.methods.options(startpoint, coordinates, main.variables.pieces[selectedpiece].type)).slice(0);
                     main.variables.highlighted = options.slice(0);
                     main.methods.togglehighlight(options);
-
                     break;
-
             }
         },
 
         options: function (startpoint, coordinates, piecetype) {
-
             coordinates = coordinates.filter(val => {
                 let pos = { x: 0, y: 0 };
                 pos.x = parseInt(val.split('_')[0]);
                 pos.y = parseInt(val.split('_')[1]);
-
                 if (!(pos.x < 1) && !(pos.x > 8) && !(pos.y < 1) && !(pos.y > 8)) {
                     return val;
                 }
             });
-
             switch (piecetype) {
-
                 case 'w_king':
-
                     coordinates = coordinates.filter(val => {
                         return ($('#' + val).attr('chess') == 'null' || ($('#' + val).attr('chess')).slice(0, 1) == 'b');
                     });
-
                     break;
                 case 'b_king':
-
                     coordinates = coordinates.filter(val => {
                         return ($('#' + val).attr('chess') == 'null' || ($('#' + val).attr('chess')).slice(0, 1) == 'w');
                     });
-
                     break;
                 case 'w_knight':
-
                     coordinates = coordinates.filter(val => {
                         return ($('#' + val).attr('chess') == 'null' || ($('#' + val).attr('chess')).slice(0, 1) == 'b');
                     });
-
                     break;
-
                 case 'b_knight':
-
                     coordinates = coordinates.filter(val => {
                         return ($('#' + val).attr('chess') == 'null' || ($('#' + val).attr('chess')).slice(0, 1) == 'w');
                     });
-
                     break;
-
                 case 'w_pawn':
-
                     coordinates = coordinates.filter(val => {
                         let sp = { x: 0, y: 0 };
                         let coordinate = val.split('_');
-
                         sp.x = startpoint.split('_')[0];
                         sp.y = startpoint.split('_')[1];
-
-                        if (coordinate[0] < sp.x || coordinate[0] > sp.x) { 
+                        if (coordinate[0] < sp.x || coordinate[0] > sp.x) {
                             return ($('#' + val).attr('chess') != 'null' && ($('#' + val).attr('chess')).slice(0, 1) == 'b');
                         } else {
-                            if (coordinate[1] == (parseInt(sp.y) + 2) && $('#' + sp.x + '_' + (parseInt(sp.y) + 1)).attr('chess') != 'null') {                                
+                            if (coordinate[1] == (parseInt(sp.y) + 2) && $('#' + sp.x + '_' + (parseInt(sp.y) + 1)).attr('chess') != 'null') {
                             } else {
                                 return ($('#' + val).attr('chess') == 'null');
                             }
                         }
-
                     });
-
                     break;
-
                 case 'b_pawn':
-
                     coordinates = coordinates.filter(val => {
                         let sp = { x: 0, y: 0 };
                         let coordinate = val.split('_');
-
                         sp.x = startpoint.split('_')[0];
                         sp.y = startpoint.split('_')[1];
-
                         if (coordinate[0] < sp.x || coordinate[0] > sp.x) {
                             return ($('#' + val).attr('chess') != 'null' && ($('#' + val).attr('chess')).slice(0, 1) == 'w');
                         } else {
-                            if (coordinate[1] == (parseInt(sp.y) - 2) && $('#' + sp.x + '_' + (parseInt(sp.y) - 1)).attr('chess') != 'null') {                            
+                            if (coordinate[1] == (parseInt(sp.y) - 2) && $('#' + sp.x + '_' + (parseInt(sp.y) - 1)).attr('chess') != 'null') {
                             } else {
                                 return ($('#' + val).attr('chess') == 'null');
                             }
                         }
                     });
-
                     break;
             }
-
             return coordinates;
         },
 
         w_options: function (position, coordinates) {
-
             let flag = false;
-
             coordinates = coordinates.map(function (val) {
                 return (parseInt(position.x) + parseInt(val.x)) + '_' + (parseInt(position.y) + parseInt(val.y));
             }).filter(val => {
                 let pos = { x: 0, y: 0 };
                 pos.x = parseInt(val.split('_')[0]);
                 pos.y = parseInt(val.split('_')[1]);
-
                 if (!(pos.x < 1) && !(pos.x > 8) && !(pos.y < 1) && !(pos.y > 8)) {
                     return val;
                 }
@@ -569,22 +493,17 @@ let main = {
                     }
                 }
             });
-
             return coordinates;
-
         },
 
         b_options: function (position, coordinates) {
-
             let flag = false;
-
             coordinates = coordinates.map(function (val) {
                 return (parseInt(position.x) + parseInt(val.x)) + '_' + (parseInt(position.y) + parseInt(val.y));
             }).filter(val => {
                 let pos = { x: 0, y: 0 };
                 pos.x = parseInt(val.split('_')[0]);
                 pos.y = parseInt(val.split('_')[1]);
-
                 if (!(pos.x < 1) && !(pos.x > 8) && !(pos.y < 1) && !(pos.y > 8)) {
                     return val;
                 }
@@ -600,43 +519,40 @@ let main = {
                     }
                 }
             });
-
             return coordinates;
-
         },
 
         capture: function (target) {
             let selectedpiece = {
                 name: $('#' + main.variables.selectedpiece).attr('chess'),
                 id: main.variables.selectedpiece
-            };            
+            };
             $('#' + target.id).html(main.variables.pieces[selectedpiece.name].img);
-            $('#' + target.id).attr('chess', selectedpiece.name);            
+            $('#' + target.id).attr('chess', selectedpiece.name);
             $('#' + selectedpiece.id).html('');
-            $('#' + selectedpiece.id).attr('chess', 'null');            
+            $('#' + selectedpiece.id).attr('chess', 'null');
             main.variables.pieces[selectedpiece.name].position = target.id;
-            main.variables.pieces[selectedpiece.name].moved = true;        
+            main.variables.pieces[selectedpiece.name].moved = true;
             main.variables.pieces[target.name].captured = true;
+            main.methods.checkPromotion(target.id, selectedpiece.name);
         },
 
         move: function (target) {
-
             let selectedpiece = $('#' + main.variables.selectedpiece).attr('chess');
-            
             $('#' + target.id).html(main.variables.pieces[selectedpiece].img);
             $('#' + target.id).attr('chess', selectedpiece);
             $('#' + main.variables.selectedpiece).html('');
             $('#' + main.variables.selectedpiece).attr('chess', 'null');
             main.variables.pieces[selectedpiece].position = target.id;
             main.variables.pieces[selectedpiece].moved = true;
+            main.methods.checkPromotion(target.id, selectedpiece);
         },
 
         endturn: function () {
-
             if (main.variables.turn == 'w') {
                 main.variables.turn = 'b';
                 main.methods.togglehighlight(main.variables.highlighted);
-                main.variables.highlighted.length = 0;                
+                main.variables.highlighted.length = 0;
                 main.variables.selectedpiece = '';
 
                 $('#turn').html("It's Blacks Turn");
@@ -647,9 +563,9 @@ let main = {
                 }, 1500);
 
             } else if (main.variables.turn == 'b') {
-                main.variables.turn = 'w';                
+                main.variables.turn = 'w';
                 main.methods.togglehighlight(main.variables.highlighted);
-                main.variables.highlighted.length = 0;                
+                main.variables.highlighted.length = 0;
                 main.variables.selectedpiece = '';
 
                 $('#turn').html("It's Whites Turn");
@@ -669,12 +585,114 @@ let main = {
             });
         },
 
+        checkPromotion: function (position, pieceName, callback) {
+            let y = parseInt(position.split('_')[1]);
+            let color = pieceName.slice(0, 1);            
+            if ((color == 'w' && y == 8) || (color == 'b' && y == 1)) {                
+                main.variables.promotionData = {
+                    position: position,
+                    pieceName: pieceName,
+                    color: color,
+                    callback: callback || null
+                };                
+                main.methods.showPromotionDialog(color);
+                return true;
+            }
+            return false;
+        },
+
+        showPromotionDialog: function (color) {
+            const pieces = [
+                { type: 'queen', symbol: color == 'w' ? '&#9813;' : '&#9819;', label: 'Queen' },
+                { type: 'rook', symbol: color == 'w' ? '&#9814;' : '&#9820;', label: 'Rook' },
+                { type: 'bishop', symbol: color == 'w' ? '&#9815;' : '&#9821;', label: 'Bishop' },
+                { type: 'knight', symbol: color == 'w' ? '&#9816;' : '&#9822;', label: 'Knight' }
+            ];
+            const dialog = document.getElementById('promotion-dialog');
+            const overlay = document.getElementById('promotion-overlay');
+            const optionsContainer = document.getElementById('promotion-options');            
+            optionsContainer.innerHTML = '';            
+            pieces.forEach(piece => {
+                const option = document.createElement('div');
+                option.className = 'promotion-option';
+                option.innerHTML = piece.symbol;
+                option.title = piece.label;
+                option.dataset.pieceType = piece.type;
+                option.addEventListener('click', function () {
+                    main.methods.handlePromotionChoice(piece.type);
+                });
+                optionsContainer.appendChild(option);
+            });        
+            dialog.style.display = 'block';
+            overlay.style.display = 'block';            
+            overlay.onclick = function () {
+                
+            };
+        },
+
+        handlePromotionChoice: function (pieceType) {
+            const data = main.variables.promotionData;
+            if (!data) return;
+            const { position, pieceName, color, callback } = data;            
+            let pieceNumber = 1;
+            let newPieceName = color + '_' + pieceType + pieceNumber;
+            while (main.variables.pieces[newPieceName] && !main.variables.pieces[newPieceName].captured) {
+                pieceNumber++;
+                newPieceName = color + '_' + pieceType + pieceNumber;
+            }            
+            if (main.variables.pieces[newPieceName] && main.variables.pieces[newPieceName].captured) {                
+                main.variables.pieces[newPieceName].position = position;
+                main.variables.pieces[newPieceName].captured = false;
+                main.variables.pieces[newPieceName].moved = false;
+                main.variables.pieces[newPieceName].img = color == 'w' ?
+                    main.methods.getPieceSymbol(color, pieceType) :
+                    main.methods.getPieceSymbol(color, pieceType);
+            } else {                
+                const symbols = {
+                    'w_queen': '&#9813;', 'b_queen': '&#9819;',
+                    'w_rook': '&#9814;', 'b_rook': '&#9820;',
+                    'w_bishop': '&#9815;', 'b_bishop': '&#9821;',
+                    'w_knight': '&#9816;', 'b_knight': '&#9822;'
+                };
+                main.variables.pieces[newPieceName] = {
+                    position: position,
+                    img: symbols[color + '_' + pieceType] || (color == 'w' ? '&#9813;' : '&#9819;'),
+                    captured: false,
+                    moved: false,
+                    type: color + '_' + pieceType
+                };
+            }            
+            $('#' + position).html(main.variables.pieces[newPieceName].img);
+            $('#' + position).attr('chess', newPieceName);            
+            main.variables.pieces[pieceName].captured = true;            
+            document.getElementById('promotion-dialog').style.display = 'none';
+            document.getElementById('promotion-overlay').style.display = 'none';            
+            const pieceLabels = { queen: 'Queen', rook: 'Rook', bishop: 'Bishop', knight: 'Knight' };
+            $('#turn').html((color == 'w' ? 'White' : 'Black') + ' pawn promoted to ' + pieceLabels[pieceType] + '!');
+            $('#turn').addClass('turnheightlight');
+            setTimeout(function () {
+                $('#turn').removeClass('turnheightlight');
+            }, 1500);            
+            main.variables.promotionData = null;            
+            if (callback) {
+                callback();
+            }
+        },
+
+        getPieceSymbol: function (color, type) {
+            const symbols = {
+                'w_queen': '&#9813;', 'b_queen': '&#9819;',
+                'w_rook': '&#9814;', 'b_rook': '&#9820;',
+                'w_bishop': '&#9815;', 'b_bishop': '&#9821;',
+                'w_knight': '&#9816;', 'b_knight': '&#9822;'
+            };
+            return symbols[color + '_' + type] || '&#9813;';
+        },
     }
 };
 
 $(document).ready(function () {
     main.methods.gamesetup();
-
     $('.cell').click(function (e) {
 
         var selectedpiece = {
@@ -693,16 +711,13 @@ $(document).ready(function () {
             id: e.target.id
         };
 
-        if (main.variables.selectedpiece == '' && target.name.slice(0, 1) == main.variables.turn) {            
+        if (main.variables.selectedpiece == '' && target.name.slice(0, 1) == main.variables.turn) {
             main.variables.selectedpiece = e.target.id;
             main.methods.moveoptions($(this).attr('chess'));
-
         } else if (main.variables.selectedpiece != '' && target.name == 'null') {
-
             if (selectedpiece.name == 'w_king' || selectedpiece.name == 'b_king') {
-
-                let t0 = (selectedpiece.name = 'w_king');
-                let t1 = (selectedpiece.name = 'b_king');
+                let t0 = (selectedpiece.name == 'w_king');
+                let t1 = (selectedpiece.name == 'b_king');
                 let t2 = (main.variables.pieces[selectedpiece.name].moved == false);
                 let t3 = (main.variables.pieces['b_rook2'].moved == false);
                 let t4 = (main.variables.pieces['w_rook2'].moved == false);
@@ -710,34 +725,28 @@ $(document).ready(function () {
                 let t6 = (target.id == '7_1');
 
                 if (t0 && t2 && t4 && t6) {
-
                     let k_position = '5_1';
                     let k_target = '7_1';
                     let r_position = '8_1';
                     let r_target = '6_1';
-
                     main.variables.pieces['w_king'].position = '7_1';
                     main.variables.pieces['w_king'].moved = true;
                     $('#' + k_position).html('');
                     $('#' + k_position).attr('chess', 'null');
                     $('#' + k_target).html(main.variables.pieces['w_king'].img);
                     $('#' + k_target).attr('chess', 'w_king');
-
                     main.variables.pieces['w_rook2'].position = '6_1';
                     main.variables.pieces['w_rook2'].moved = true;
                     $('#' + r_position).html('');
                     $('#' + r_position).attr('chess', 'null');
                     $('#' + r_target).html(main.variables.pieces['w_rook2'].img);
                     $('#' + r_target).attr('chess', 'w_rook2');
-
                     main.methods.endturn();
-
                 } else if (t1 && t2 && t3 && t5) {
-
                     let k_position = '5_8';
                     let k_target = '7_8';
                     let r_position = '8_8';
-                    let r_target = '6_8';                    
+                    let r_target = '6_8';
                     main.variables.pieces['b_king'].position = '7_8';
                     main.variables.pieces['b_king'].moved = true;
                     $('#' + k_position).html('');
@@ -751,37 +760,27 @@ $(document).ready(function () {
                     $('#' + r_position).attr('chess', 'null');
                     $('#' + r_target).html(main.variables.pieces['b_rook2'].img);
                     $('#' + r_target).attr('chess', 'b_rook2');
-
                     main.methods.endturn();
-
                 } else {
                     main.methods.move(target);
                     main.methods.endturn();
                 }
-
             } else {
-
                 main.methods.move(target);
                 main.methods.endturn();
-
             }
-
         } else if (main.variables.selectedpiece != '' && target.name != 'null' && target.id != selectedpiece.id && selectedpiece.name.slice(0, 1) != target.name.slice(0, 1)) {
-
-            if (selectedpiece.id != target.id && main.variables.highlighted.indexOf(target.id) != (-1)) {               
+            if (selectedpiece.id != target.id && main.variables.highlighted.indexOf(target.id) != (-1)) {
                 main.methods.capture(target)
                 main.methods.endturn();
             }
-
-        } else if (main.variables.selectedpiece != '' && target.name != 'null' && target.id != selectedpiece.id && selectedpiece.name.slice(0, 1) == target.name.slice(0, 1)) {            
+        } else if (main.variables.selectedpiece != '' && target.name != 'null' && target.id != selectedpiece.id && selectedpiece.name.slice(0, 1) == target.name.slice(0, 1)) {
             main.methods.togglehighlight(main.variables.highlighted);
             main.variables.highlighted.length = 0;
             main.variables.selectedpiece = target.id;
             main.methods.moveoptions(target.name);
         }
-
     });
-
     $('body').contextmenu(function (e) {
         e.preventDefault();
     });

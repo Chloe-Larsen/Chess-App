@@ -367,3 +367,47 @@ div * {
     animation-timing-function: ease-in-out;
     animation-iteration-count: infinite;
 }
+
+#promotion-dialog {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-width: 300px;
+}
+
+#promotion-dialog h3 {
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+#promotion-dialog p {
+    margin: 0 0 15px 0;
+    color: #666;
+}
+
+.promotion-option {
+    width: 60px;
+    height: 60px;
+    font-size: 40px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #f9f9f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.promotion-option:hover {
+    border-color: #4cb85c;
+    background: #e8f5e9;
+    transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(76, 184, 92, 0.3);
+}
+
+.promotion-option:active {
+    transform: scale(0.95);
+}
+
+#promotion-overlay {
+    backdrop-filter: blur(3px);
+}

@@ -101,6 +101,19 @@
         <div class="cellPre">h</div>
         <div id="turn">It's Whites Turn</div>
     </div>
+
+    <div id="promotion-dialog"
+        style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.5); z-index: 1000; text-align: center;">
+        <h3>Promote Pawn</h3>
+        <p>Choose a piece to promote to:</p>
+        <div id="promotion-options" style="display: flex; gap: 10px; justify-content: center; padding: 10px;">
+            <!-- Options will be dynamically added -->
+        </div>
+    </div>
+    <div id="promotion-overlay"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999;">
+    </div>
+
     <script src="page.js"></script>
 </body>
 
