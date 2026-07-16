@@ -5,6 +5,13 @@ body {
     padding: 0px;
     margin: 0px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 20px;
+    max-width: 900px;
+    margin: 0 auto;
 }
 
 div * {
@@ -54,7 +61,7 @@ div * {
 }
 
 .cell {
-    border: 1px solid #00a4a2;
+    border: 1px solid #000000;
     height: 100%;
     width: 100%;
     max-height: 50px;
@@ -366,4 +373,155 @@ div * {
     animation-duration: 100ms;
     animation-timing-function: ease-in-out;
     animation-iteration-count: infinite;
+}
+
+#promotion-dialog {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-width: 300px;
+}
+
+#promotion-dialog h3 {
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+#promotion-dialog p {
+    margin: 0 0 15px 0;
+    color: #666;
+}
+
+.promotion-option {
+    width: 60px;
+    height: 60px;
+    font-size: 40px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #f9f9f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.promotion-option:hover {
+    border-color: #4cb85c;
+    background: #e8f5e9;
+    transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(76, 184, 92, 0.3);
+}
+
+.promotion-option:active {
+    transform: scale(0.95);
+}
+
+#promotion-overlay {
+    backdrop-filter: blur(3px);
+}
+
+/* Check and Checkmate Styles */
+#turn.check {
+    background: #ff6b6b !important;
+    color: #fff;
+    animation: pulse 0.8s ease-in-out infinite alternate;
+}
+
+#turn.checkmate {
+    background: #ff0000 !important;
+    color: #fff;
+    font-weight: bold;
+    animation: pulse 0.5s ease-in-out infinite alternate;
+}
+
+.king-in-check {
+    background: #ff4444 !important;
+    animation: pulse 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes pulse {
+    from {
+        opacity: 0.7;
+        transform: scale(1);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1.02);
+    }
+}
+
+#sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    min-width: 200px;
+    padding-top: 20px;
+}
+
+#clock {
+    border: 1px solid #000;
+    border-radius: 5px;
+    padding: 10px;
+    background: #fff;
+}
+
+.clock-display {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 10px;
+    margin: 3px 0;
+    border-radius: 3px;
+}
+
+.clock-display.active {
+    background: #4cb85c;
+    color: #fff;
+}
+
+.clock-display.active .clock-label,
+.clock-display.active .clock-time {
+    color: #fff;
+}
+
+.clock-label {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.clock-time {
+    font-size: 20px;
+    font-weight: bold;
+    font-family: 'Courier New', monospace;
+}
+
+.clock-display.low-time .clock-time {
+    color: #ff0000;
+    animation: pulse 1s ease-in-out infinite alternate;
+}
+
+#restartBtn {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    background: #fff;
+    border: 1px solid #000;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+}
+
+#restartBtn:hover {
+    background: #4cb85c;
+    color: #fff;
+    border-color: #4cb85c;
+}
+
+@keyframes pulse {
+    from {
+        opacity: 0.7;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
