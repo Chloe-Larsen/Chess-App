@@ -5,6 +5,9 @@ let main = {
         highlighted: [],
         gameOver: false,
         promotionData: null,
+        halfMoveClock: 0,
+        positionHistory: [],
+        enPassantTarget: null,
         pieces: {
             w_king: {
                 position: '5_1',
@@ -236,13 +239,18 @@ let main = {
     },
     methods: {
         gamesetup: function () {
+            main.variables.halfMoveClock = 0;
+            main.variables.positionHistory = [];
+            main.variables.gameOver = false;
+            main.variables.enPassantTarget = null;
             $('.cell').attr('chess', 'null');
             for (let gamepiece in main.variables.pieces) {
-                if (!main.variables.pieces[gamepiece].captured) {
-                    if (main.variables.pieces[gamepiece].position) {
-                        $('#' + main.variables.pieces[gamepiece].position).html(main.variables.pieces[gamepiece].img);
-                        $('#' + main.variables.pieces[gamepiece].position).attr('chess', gamepiece);
-                    }
+                if (main.variables.pieces[gamepiece].captured) {
+                    main.variables.pieces[gamepiece].captured = false;
+                }
+                if (main.variables.pieces[gamepiece].position) {
+                    $('#' + main.variables.pieces[gamepiece].position).html(main.variables.pieces[gamepiece].img);
+                    $('#' + main.variables.pieces[gamepiece].position).attr('chess', gamepiece);
                 }
             }
         },
@@ -385,29 +393,49 @@ let main = {
                     break;
 
                 case 'w_pawn':
+                    let wPawnCoordinates = [];
                     if (main.variables.pieces[selectedpiece].moved == false) {
-                        coordinates = [{ x: 0, y: 1 }, { x: 0, y: 2 }, { x: 1, y: 1 }, { x: -1, y: 1 }].map(function (val) {
+                        wPawnCoordinates = [{ x: 0, y: 1 }, { x: 0, y: 2 }, { x: 1, y: 1 }, { x: -1, y: 1 }].map(function (val) {
                             return (parseInt(position.x) + parseInt(val.x)) + '_' + (parseInt(position.y) + parseInt(val.y));
                         });
                     } else {
-                        coordinates = [{ x: 0, y: 1 }, { x: 1, y: 1 }, { x: -1, y: 1 }].map(function (val) {
+                        wPawnCoordinates = [{ x: 0, y: 1 }, { x: 1, y: 1 }, { x: -1, y: 1 }].map(function (val) {
                             return (parseInt(position.x) + parseInt(val.x)) + '_' + (parseInt(position.y) + parseInt(val.y));
                         });
                     }
-                    options = (main.methods.options(startpoint, coordinates, main.variables.pieces[selectedpiece].type)).slice(0);
+                    if (main.variables.enPassantTarget) {
+                        let epX = parseInt(main.variables.enPassantTarget.split('_')[0]);
+                        let epY = parseInt(main.variables.enPassantTarget.split('_')[1]);
+                        let currentX = parseInt(position.x);
+                        let currentY = parseInt(position.y);
+                        if (Math.abs(epX - currentX) === 1 && epY === currentY + 1) {
+                            wPawnCoordinates.push(main.variables.enPassantTarget);
+                        }
+                    }
+                    options = (main.methods.options(startpoint, wPawnCoordinates, main.variables.pieces[selectedpiece].type)).slice(0);
                     break;
 
                 case 'b_pawn':
+                    let bPawnCoordinates = [];
                     if (main.variables.pieces[selectedpiece].moved == false) {
-                        coordinates = [{ x: 0, y: -1 }, { x: 0, y: -2 }, { x: 1, y: -1 }, { x: -1, y: -1 }].map(function (val) {
+                        bPawnCoordinates = [{ x: 0, y: -1 }, { x: 0, y: -2 }, { x: 1, y: -1 }, { x: -1, y: -1 }].map(function (val) {
                             return (parseInt(position.x) + parseInt(val.x)) + '_' + (parseInt(position.y) + parseInt(val.y));
                         });
                     } else {
-                        coordinates = [{ x: 0, y: -1 }, { x: 1, y: -1 }, { x: -1, y: -1 }].map(function (val) {
+                        bPawnCoordinates = [{ x: 0, y: -1 }, { x: 1, y: -1 }, { x: -1, y: -1 }].map(function (val) {
                             return (parseInt(position.x) + parseInt(val.x)) + '_' + (parseInt(position.y) + parseInt(val.y));
                         });
                     }
-                    options = (main.methods.options(startpoint, coordinates, main.variables.pieces[selectedpiece].type)).slice(0);
+                    if (main.variables.enPassantTarget) {
+                        let epX = parseInt(main.variables.enPassantTarget.split('_')[0]);
+                        let epY = parseInt(main.variables.enPassantTarget.split('_')[1]);
+                        let currentX = parseInt(position.x);
+                        let currentY = parseInt(position.y);
+                        if (Math.abs(epX - currentX) === 1 && epY === currentY - 1) {
+                            bPawnCoordinates.push(main.variables.enPassantTarget);
+                        }
+                    }
+                    options = (main.methods.options(startpoint, bPawnCoordinates, main.variables.pieces[selectedpiece].type)).slice(0);
                     break;
             }
             let filteredOptions = options.filter(function (targetPos) {
@@ -476,8 +504,16 @@ let main = {
                         let coordinate = val.split('_');
                         sp.x = startpoint.split('_')[0];
                         sp.y = startpoint.split('_')[1];
+                        let isEnPassant = false;
+                        if (main.variables.enPassantTarget && main.variables.enPassantTarget === val) {
+                            isEnPassant = true;
+                        }
                         if (coordinate[0] < sp.x || coordinate[0] > sp.x) {
-                            return ($('#' + val).attr('chess') != 'null' && ($('#' + val).attr('chess')).slice(0, 1) == 'b');
+                            let targetChess = $('#' + val).attr('chess');
+                            if (isEnPassant) {
+                                return true;
+                            }
+                            return (targetChess != 'null' && targetChess.slice(0, 1) == 'b');
                         } else {
                             if (coordinate[1] == (parseInt(sp.y) + 2) && $('#' + sp.x + '_' + (parseInt(sp.y) + 1)).attr('chess') != 'null') {
                                 return false;
@@ -493,8 +529,17 @@ let main = {
                         let coordinate = val.split('_');
                         sp.x = startpoint.split('_')[0];
                         sp.y = startpoint.split('_')[1];
+                        let isEnPassant = false;
+                        if (main.variables.enPassantTarget && main.variables.enPassantTarget === val) {
+                            isEnPassant = true;
+                        }
                         if (coordinate[0] < sp.x || coordinate[0] > sp.x) {
-                            return ($('#' + val).attr('chess') != 'null' && ($('#' + val).attr('chess')).slice(0, 1) == 'w');
+
+                            let targetChess = $('#' + val).attr('chess');
+                            if (isEnPassant) {
+                                return true;
+                            }
+                            return (targetChess != 'null' && targetChess.slice(0, 1) == 'w');
                         } else {
                             if (coordinate[1] == (parseInt(sp.y) - 2) && $('#' + sp.x + '_' + (parseInt(sp.y) - 1)).attr('chess') != 'null') {
                                 return false;
@@ -568,18 +613,74 @@ let main = {
                 name: $('#' + main.variables.selectedpiece).attr('chess'),
                 id: main.variables.selectedpiece
             };
+            main.variables.enPassantTarget = null;
+            main.variables.halfMoveClock = 0;
+            if (!main.variables.positionHistory) {
+                main.variables.positionHistory = [];
+            }
+            main.variables.positionHistory.push(main.methods.getPositionHash());
+            let isEnPassant = false;
+            let enPassantPawn = null;
+            if (selectedpiece.name.includes('pawn')) {
+                let targetX = parseInt(target.id.split('_')[0]);
+                let targetY = parseInt(target.id.split('_')[1]);
+                let color = selectedpiece.name.slice(0, 1);
+
+                if (main.variables.enPassantTarget && main.variables.enPassantTarget === target.id) {
+                    isEnPassant = true;
+                    let pawnY = color === 'w' ? targetY - 1 : targetY + 1;
+                    enPassantPawn = $('#' + targetX + '_' + pawnY).attr('chess');
+                }
+            }
             $('#' + target.id).html(main.variables.pieces[selectedpiece.name].img);
             $('#' + target.id).attr('chess', selectedpiece.name);
             $('#' + selectedpiece.id).html('');
             $('#' + selectedpiece.id).attr('chess', 'null');
             main.variables.pieces[selectedpiece.name].position = target.id;
             main.variables.pieces[selectedpiece.name].moved = true;
-            main.variables.pieces[target.name].captured = true;
+            if (isEnPassant && enPassantPawn) {
+                let pawnX = target.id.split('_')[0];
+                let pawnY = target.id.split('_')[1];
+                let capturedPawnPos = pawnX + '_' + (parseInt(pawnY) + (selectedpiece.name.slice(0, 1) === 'w' ? -1 : 1));
+                $('#' + capturedPawnPos).html('');
+                $('#' + capturedPawnPos).attr('chess', 'null');
+                main.variables.pieces[enPassantPawn].captured = true;
+                main.variables.pieces[enPassantPawn].position = null;
+                $('#turn').html((selectedpiece.name.slice(0, 1) === 'w' ? 'White' : 'Black') + ' captured en passant!');
+                $('#turn').addClass('turnheightlight');
+                setTimeout(function () {
+                    $('#turn').removeClass('turnheightlight');
+                }, 1500);
+            } else {
+                main.variables.pieces[target.name].captured = true;
+                main.variables.pieces[target.name].position = null;
+            }
             main.methods.checkPromotion(target.id, selectedpiece.name);
         },
 
         move: function (target) {
             let selectedpiece = $('#' + main.variables.selectedpiece).attr('chess');
+            main.variables.enPassantTarget = null;
+            if (!main.variables.halfMoveClock) {
+                main.variables.halfMoveClock = 0;
+            }
+            if (selectedpiece.includes('pawn')) {
+                let originalPos = main.variables.pieces[selectedpiece].position;
+                let originalY = parseInt(originalPos.split('_')[1]);
+                let targetY = parseInt(target.id.split('_')[1]);
+                if (Math.abs(targetY - originalY) === 2) {
+                    let color = selectedpiece.slice(0, 1);
+                    let enPassantY = (originalY + targetY) / 2;
+                    main.variables.enPassantTarget = target.id.split('_')[0] + '_' + enPassantY;
+                }
+                main.variables.halfMoveClock = 0;
+            } else {
+                main.variables.halfMoveClock++;
+            }
+            if (!main.variables.positionHistory) {
+                main.variables.positionHistory = [];
+            }
+            main.variables.positionHistory.push(main.methods.getPositionHash());
             $('#' + target.id).html(main.variables.pieces[selectedpiece].img);
             $('#' + target.id).attr('chess', selectedpiece);
             $('#' + main.variables.selectedpiece).html('');
@@ -592,11 +693,12 @@ let main = {
         endturn: function () {
             main.methods.togglehighlight(main.variables.highlighted);
             main.variables.highlighted = [];
-            main.variables.selectedpiece = '';            
+            main.variables.selectedpiece = '';
+            main.variables.enPassantTarget = null;
             $('#turn').removeClass('turnhighlight turnheightlight check checkmate draw');
 
             if (main.variables.turn == 'w') {
-                main.variables.turn = 'b';                
+                main.variables.turn = 'b';
                 let inCheck = main.methods.isInCheck('b');
                 let isCheckmate = false;
 
@@ -612,7 +714,7 @@ let main = {
                         $('#turn').addClass('check');
                         return;
                     }
-                }                
+                }
                 let drawType = main.methods.checkForDraw('b');
                 if (drawType) {
                     let messages = {
@@ -625,7 +727,7 @@ let main = {
                     $('#turn').addClass('draw');
                     main.variables.gameOver = true;
                     return;
-                }                
+                }
                 $('#turn').html("It's Blacks Turn");
                 $('#turn').addClass('turnhighlight');
                 setTimeout(function () {
@@ -633,7 +735,7 @@ let main = {
                 }, 1500);
 
             } else if (main.variables.turn == 'b') {
-                main.variables.turn = 'w';                
+                main.variables.turn = 'w';
                 let inCheck = main.methods.isInCheck('w');
                 let isCheckmate = false;
                 if (inCheck) {
@@ -648,7 +750,7 @@ let main = {
                         $('#turn').addClass('check');
                         return;
                     }
-                }                
+                }
                 let drawType = main.methods.checkForDraw('w');
                 if (drawType) {
                     let messages = {
@@ -661,7 +763,7 @@ let main = {
                     $('#turn').addClass('draw');
                     main.variables.gameOver = true;
                     return;
-                }                
+                }
                 $('#turn').html("It's Whites Turn");
                 $('#turn').addClass('turnhighlight');
                 setTimeout(function () {
@@ -1106,96 +1208,117 @@ let main = {
 
 $(document).ready(function () {
     main.methods.gamesetup();
-    $('.cell').click(function (e) {
-
+    $('.cell').click(function (e) {        
+        if (main.variables.gameOver) {
+            return;
+        }
         var selectedpiece = {
             name: '',
             id: main.variables.selectedpiece
         };
-
         if (main.variables.selectedpiece == '') {
             selectedpiece.name = $('#' + e.target.id).attr('chess');
         } else {
             selectedpiece.name = $('#' + main.variables.selectedpiece).attr('chess');
         }
-
         var target = {
             name: $(this).attr('chess'),
             id: e.target.id
-        };
-
-        if (main.variables.selectedpiece == '' && target.name.slice(0, 1) == main.variables.turn) {
+        };        
+        if (main.variables.selectedpiece == '' && target.name != 'null' && target.name.slice(0, 1) == main.variables.turn) {
             main.variables.selectedpiece = e.target.id;
             main.methods.moveoptions($(this).attr('chess'));
-        } else if (main.variables.selectedpiece != '' && target.name == 'null') {
-            if (selectedpiece.name == 'w_king' || selectedpiece.name == 'b_king') {
-                let t0 = (selectedpiece.name == 'w_king');
-                let t1 = (selectedpiece.name == 'b_king');
-                let t2 = (main.variables.pieces[selectedpiece.name].moved == false);
-                let t3 = (main.variables.pieces['b_rook2'].moved == false);
-                let t4 = (main.variables.pieces['w_rook2'].moved == false);
-                let t5 = (target.id == '7_8');
-                let t6 = (target.id == '7_1');
-
-                if (t0 && t2 && t4 && t6) {
-                    let k_position = '5_1';
-                    let k_target = '7_1';
-                    let r_position = '8_1';
-                    let r_target = '6_1';
-                    main.variables.pieces['w_king'].position = '7_1';
-                    main.variables.pieces['w_king'].moved = true;
-                    $('#' + k_position).html('');
-                    $('#' + k_position).attr('chess', 'null');
-                    $('#' + k_target).html(main.variables.pieces['w_king'].img);
-                    $('#' + k_target).attr('chess', 'w_king');
-                    main.variables.pieces['w_rook2'].position = '6_1';
-                    main.variables.pieces['w_rook2'].moved = true;
-                    $('#' + r_position).html('');
-                    $('#' + r_position).attr('chess', 'null');
-                    $('#' + r_target).html(main.variables.pieces['w_rook2'].img);
-                    $('#' + r_target).attr('chess', 'w_rook2');
-                    main.methods.endturn();
-                } else if (t1 && t2 && t3 && t5) {
-                    let k_position = '5_8';
-                    let k_target = '7_8';
-                    let r_position = '8_8';
-                    let r_target = '6_8';
-                    main.variables.pieces['b_king'].position = '7_8';
-                    main.variables.pieces['b_king'].moved = true;
-                    $('#' + k_position).html('');
-                    $('#' + k_position).attr('chess', 'null');
-                    $('#' + k_target).html(main.variables.pieces['b_king'].img);
-                    $('#' + k_target).attr('chess', 'b_king');
-
-                    main.variables.pieces['b_rook2'].position = '6_8';
-                    main.variables.pieces['b_rook2'].moved = true;
-                    $('#' + r_position).html('');
-                    $('#' + r_position).attr('chess', 'null');
-                    $('#' + r_target).html(main.variables.pieces['b_rook2'].img);
-                    $('#' + r_target).attr('chess', 'b_rook2');
-                    main.methods.endturn();
-                } else {
-                    main.methods.move(target);
-                    main.methods.endturn();
-                }
-            } else {
+            return;
+        }        
+        if (main.variables.selectedpiece != '' && target.name == 'null') {            
+            if (main.variables.highlighted.indexOf(target.id) != -1) {                
+                if (selectedpiece.name == 'w_king' || selectedpiece.name == 'b_king') {
+                    let t0 = (selectedpiece.name == 'w_king');
+                    let t1 = (selectedpiece.name == 'b_king');
+                    let t2 = (main.variables.pieces[selectedpiece.name].moved == false);
+                    let t3 = (main.variables.pieces['b_rook2'].moved == false);
+                    let t4 = (main.variables.pieces['w_rook2'].moved == false);
+                    let t5 = (target.id == '7_8');
+                    let t6 = (target.id == '7_1');
+                    if (t0 && t2 && t4 && t6) {                        
+                        let k_position = '5_1';
+                        let k_target = '7_1';
+                        let r_position = '8_1';
+                        let r_target = '6_1';
+                        main.variables.pieces['w_king'].position = '7_1';
+                        main.variables.pieces['w_king'].moved = true;
+                        $('#' + k_position).html('');
+                        $('#' + k_position).attr('chess', 'null');
+                        $('#' + k_target).html(main.variables.pieces['w_king'].img);
+                        $('#' + k_target).attr('chess', 'w_king');
+                        main.variables.pieces['w_rook2'].position = '6_1';
+                        main.variables.pieces['w_rook2'].moved = true;
+                        $('#' + r_position).html('');
+                        $('#' + r_position).attr('chess', 'null');
+                        $('#' + r_target).html(main.variables.pieces['w_rook2'].img);
+                        $('#' + r_target).attr('chess', 'w_rook2');
+                        main.methods.endturn();
+                        return;
+                    } else if (t1 && t2 && t3 && t5) {                        
+                        let k_position = '5_8';
+                        let k_target = '7_8';
+                        let r_position = '8_8';
+                        let r_target = '6_8';
+                        main.variables.pieces['b_king'].position = '7_8';
+                        main.variables.pieces['b_king'].moved = true;
+                        $('#' + k_position).html('');
+                        $('#' + k_position).attr('chess', 'null');
+                        $('#' + k_target).html(main.variables.pieces['b_king'].img);
+                        $('#' + k_target).attr('chess', 'b_king');
+                        main.variables.pieces['b_rook2'].position = '6_8';
+                        main.variables.pieces['b_rook2'].moved = true;
+                        $('#' + r_position).html('');
+                        $('#' + r_position).attr('chess', 'null');
+                        $('#' + r_target).html(main.variables.pieces['b_rook2'].img);
+                        $('#' + r_target).attr('chess', 'b_rook2');
+                        main.methods.endturn();
+                        return;
+                    }
+                }                
                 main.methods.move(target);
                 main.methods.endturn();
             }
-        } else if (main.variables.selectedpiece != '' && target.name != 'null' && target.id != selectedpiece.id && selectedpiece.name.slice(0, 1) != target.name.slice(0, 1)) {
-            if (selectedpiece.id != target.id && main.variables.highlighted.indexOf(target.id) != (-1)) {
-                main.methods.capture(target)
+            return;
+        }        
+        if (main.variables.selectedpiece != '' && target.name != 'null' &&
+            target.id != selectedpiece.id && selectedpiece.name.slice(0, 1) != target.name.slice(0, 1)) {            
+            if (main.variables.highlighted.indexOf(target.id) != -1) {
+                main.methods.capture(target);
                 main.methods.endturn();
             }
-        } else if (main.variables.selectedpiece != '' && target.name != 'null' && target.id != selectedpiece.id && selectedpiece.name.slice(0, 1) == target.name.slice(0, 1)) {
+            return;
+        }        
+        if (main.variables.selectedpiece != '' && target.name == 'null' &&
+            target.id != selectedpiece.id && selectedpiece.name.includes('pawn')) {            
+            if (main.variables.enPassantTarget &&
+                main.variables.enPassantTarget === target.id &&
+                main.variables.highlighted.indexOf(target.id) != -1) {
+                main.methods.capture(target);
+                main.methods.endturn();
+                return;
+            }
+        }
+        if (main.variables.selectedpiece != '' && target.name != 'null' &&
+            target.id != selectedpiece.id && selectedpiece.name.slice(0, 1) == target.name.slice(0, 1)) {            
             main.methods.togglehighlight(main.variables.highlighted);
-            main.variables.highlighted.length = 0;
+            main.variables.highlighted = [];            
             main.variables.selectedpiece = target.id;
             main.methods.moveoptions(target.name);
+            return;
+        }        
+        if (main.variables.selectedpiece != '' && target.id == selectedpiece.id) {
+            main.methods.togglehighlight(main.variables.highlighted);
+            main.variables.highlighted = [];
+            main.variables.selectedpiece = '';
+            return;
         }
-    });
+    });    
     $('body').contextmenu(function (e) {
         e.preventDefault();
     });
-
 });
