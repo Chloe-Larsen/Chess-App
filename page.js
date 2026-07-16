@@ -8,6 +8,12 @@ let main = {
         halfMoveClock: 0,
         positionHistory: [],
         enPassantTarget: null,
+        clock: {
+            white: 600,
+            black: 600,
+            running: false,
+            interval: null
+        },
         pieces: {
             w_king: {
                 position: '5_1',
@@ -243,14 +249,34 @@ let main = {
             main.variables.positionHistory = [];
             main.variables.gameOver = false;
             main.variables.enPassantTarget = null;
+            main.methods.resetClock();
+            const initialPositions = {
+                'w_king': '5_1', 'w_queen': '4_1',
+                'w_bishop1': '3_1', 'w_bishop2': '6_1',
+                'w_knight1': '2_1', 'w_knight2': '7_1',
+                'w_rook1': '1_1', 'w_rook2': '8_1',
+                'w_pawn1': '1_2', 'w_pawn2': '2_2', 'w_pawn3': '3_2', 'w_pawn4': '4_2',
+                'w_pawn5': '5_2', 'w_pawn6': '6_2', 'w_pawn7': '7_2', 'w_pawn8': '8_2',
+                'b_king': '5_8', 'b_queen': '4_8',
+                'b_bishop1': '3_8', 'b_bishop2': '6_8',
+                'b_knight1': '2_8', 'b_knight2': '7_8',
+                'b_rook1': '1_8', 'b_rook2': '8_8',
+                'b_pawn1': '1_7', 'b_pawn2': '2_7', 'b_pawn3': '3_7', 'b_pawn4': '4_7',
+                'b_pawn5': '5_7', 'b_pawn6': '6_7', 'b_pawn7': '7_7', 'b_pawn8': '8_7'
+            };
+            for (let pieceName in main.variables.pieces) {
+                main.variables.pieces[pieceName].position = initialPositions[pieceName];
+                main.variables.pieces[pieceName].captured = false;
+                main.variables.pieces[pieceName].moved = false;
+            }
             $('.cell').attr('chess', 'null');
+            $('.cell').html('');
             for (let gamepiece in main.variables.pieces) {
-                if (main.variables.pieces[gamepiece].captured) {
-                    main.variables.pieces[gamepiece].captured = false;
-                }
-                if (main.variables.pieces[gamepiece].position) {
-                    $('#' + main.variables.pieces[gamepiece].position).html(main.variables.pieces[gamepiece].img);
-                    $('#' + main.variables.pieces[gamepiece].position).attr('chess', gamepiece);
+                if (!main.variables.pieces[gamepiece].captured) {
+                    if (main.variables.pieces[gamepiece].position) {
+                        $('#' + main.variables.pieces[gamepiece].position).html(main.variables.pieces[gamepiece].img);
+                        $('#' + main.variables.pieces[gamepiece].position).attr('chess', gamepiece);
+                    }
                 }
             }
         },
@@ -566,15 +592,12 @@ let main = {
                 }
             }).filter(val => {
                 if (flag == false) {
-                    if ($('#' + val).attr('chess') == 'null') {
-                        console.log(val)
+                    if ($('#' + val).attr('chess') == 'null') {                        
                         return val;
                     } else if (($('#' + val).attr('chess')).slice(0, 1) == 'b') {
-                        flag = true;
-                        console.log(val)
+                        flag = true;                        
                         return val;
-                    } else if (($('#' + val).attr('chess')).slice(0, 1) == 'w') {
-                        console.log(val + '-3')
+                    } else if (($('#' + val).attr('chess')).slice(0, 1) == 'w') {                        
                         flag = true;
                     }
                 }
@@ -695,6 +718,7 @@ let main = {
             main.variables.highlighted = [];
             main.variables.selectedpiece = '';
             main.variables.enPassantTarget = null;
+            main.methods.stopClock();
             $('#turn').removeClass('turnhighlight turnheightlight check checkmate draw');
 
             if (main.variables.turn == 'w') {
@@ -708,10 +732,13 @@ let main = {
                         $('#turn').html("CHECKMATE! White Wins!");
                         $('#turn').addClass('checkmate');
                         main.variables.gameOver = true;
+                        main.methods.updateClockDisplay();
                         return;
                     } else {
                         $('#turn').html("Black is in CHECK!");
                         $('#turn').addClass('check');
+                        main.methods.startClock();
+                        main.methods.updateClockDisplay();
                         return;
                     }
                 }
@@ -725,11 +752,15 @@ let main = {
                     };
                     $('#turn').html(messages[drawType] || "DRAW!");
                     $('#turn').addClass('draw');
+                    main.methods.updateClockDisplay();
                     main.variables.gameOver = true;
                     return;
                 }
+
                 $('#turn').html("It's Blacks Turn");
                 $('#turn').addClass('turnhighlight');
+                main.methods.startClock();
+                main.methods.updateClockDisplay();
                 setTimeout(function () {
                     $('#turn').removeClass('turnhighlight');
                 }, 1500);
@@ -744,10 +775,13 @@ let main = {
                         $('#turn').html("CHECKMATE! Black Wins!");
                         $('#turn').addClass('checkmate');
                         main.variables.gameOver = true;
+                        main.methods.updateClockDisplay();
                         return;
                     } else {
                         $('#turn').html("White is in CHECK!");
                         $('#turn').addClass('check');
+                        main.methods.startClock();
+                        main.methods.updateClockDisplay();
                         return;
                     }
                 }
@@ -759,13 +793,17 @@ let main = {
                         'fifty_move': "DRAW! Fifty-Move Rule!",
                         'threefold_repetition': "DRAW! Threefold Repetition!"
                     };
+
                     $('#turn').html(messages[drawType] || "DRAW!");
-                    $('#turn').addClass('draw');
+                    $('#turn').addClass('draw');                                    
                     main.variables.gameOver = true;
+                    main.methods.updateClockDisplay();
                     return;
                 }
                 $('#turn').html("It's Whites Turn");
                 $('#turn').addClass('turnhighlight');
+                main.methods.startClock();
+                main.methods.updateClockDisplay();
                 setTimeout(function () {
                     $('#turn').removeClass('turnhighlight');
                 }, 1500);
@@ -1188,6 +1226,7 @@ let main = {
             hash += 'turn:' + main.variables.turn;
             return hash;
         },
+
         checkForDraw: function (color) {
             if (main.methods.isStalemate(color)) {
                 return 'stalemate';
@@ -1203,12 +1242,94 @@ let main = {
             }
             return false;
         },
+
+        startClock: function () {
+            if (main.variables.clock.interval) {
+                clearInterval(main.variables.clock.interval);
+            }
+            main.variables.clock.running = true;
+            main.variables.clock.interval = setInterval(function () {
+                let color = main.variables.turn;
+                if (color === 'w') {
+                    main.variables.clock.white--;
+                    if (main.variables.clock.white <= 0) {
+                        main.variables.clock.white = 0;
+                        main.methods.stopClock();
+                        $('#turn').html("WHITE RAN OUT OF TIME! Black Wins!");
+                        $('#turn').addClass('checkmate');
+                        main.variables.gameOver = true;
+                        main.methods.updateClockDisplay();
+                        return;
+                    }
+                } else {
+                    main.variables.clock.black--;
+                    if (main.variables.clock.black <= 0) {
+                        main.variables.clock.black = 0;
+                        main.methods.stopClock();
+                        $('#turn').html("BLACK RAN OUT OF TIME! White Wins!");
+                        $('#turn').addClass('checkmate');
+                        main.variables.gameOver = true;
+                        main.methods.updateClockDisplay();
+                        return;
+                    }
+                }
+                main.methods.updateClockDisplay();
+            }, 1000);
+        },
+
+        stopClock: function () {
+            main.variables.clock.running = false;
+            if (main.variables.clock.interval) {
+                clearInterval(main.variables.clock.interval);
+                main.variables.clock.interval = null;
+            }
+        },
+
+        updateClockDisplay: function () {
+            let whiteMinutes = Math.floor(main.variables.clock.white / 60);
+            let whiteSeconds = main.variables.clock.white % 60;
+            let blackMinutes = Math.floor(main.variables.clock.black / 60);
+            let blackSeconds = main.variables.clock.black % 60;
+            $('#white-clock').text(
+                String(whiteMinutes).padStart(2, '0') + ':' +
+                String(whiteSeconds).padStart(2, '0')
+            );
+            $('#black-clock').text(
+                String(blackMinutes).padStart(2, '0') + ':' +
+                String(blackSeconds).padStart(2, '0')
+            );
+            $('.clock-display').removeClass('active');
+            if (main.variables.turn === 'w') {
+                $('.clock-display:first-child').addClass('active');
+            } else {
+                $('.clock-display:last-child').addClass('active');
+            }
+            if (main.variables.clock.white < 60) {
+                $('.clock-display:first-child').addClass('low-time');
+            } else {
+                $('.clock-display:first-child').removeClass('low-time');
+            }
+            if (main.variables.clock.black < 60) {
+                $('.clock-display:last-child').addClass('low-time');
+            } else {
+                $('.clock-display:last-child').removeClass('low-time');
+            }
+        },
+
+        resetClock: function () {
+            main.methods.stopClock();
+            main.variables.clock.white = 600;
+            main.variables.clock.black = 600;
+            main.variables.clock.running = false;
+            main.methods.updateClockDisplay();
+            $('.clock-display').removeClass('active low-time');
+        },
     }
 };
 
 $(document).ready(function () {
     main.methods.gamesetup();
-    $('.cell').click(function (e) {        
+    $('.cell').click(function (e) {
         if (main.variables.gameOver) {
             return;
         }
@@ -1224,14 +1345,14 @@ $(document).ready(function () {
         var target = {
             name: $(this).attr('chess'),
             id: e.target.id
-        };        
+        };
         if (main.variables.selectedpiece == '' && target.name != 'null' && target.name.slice(0, 1) == main.variables.turn) {
             main.variables.selectedpiece = e.target.id;
             main.methods.moveoptions($(this).attr('chess'));
             return;
-        }        
-        if (main.variables.selectedpiece != '' && target.name == 'null') {            
-            if (main.variables.highlighted.indexOf(target.id) != -1) {                
+        }
+        if (main.variables.selectedpiece != '' && target.name == 'null') {
+            if (main.variables.highlighted.indexOf(target.id) != -1) {
                 if (selectedpiece.name == 'w_king' || selectedpiece.name == 'b_king') {
                     let t0 = (selectedpiece.name == 'w_king');
                     let t1 = (selectedpiece.name == 'b_king');
@@ -1240,7 +1361,7 @@ $(document).ready(function () {
                     let t4 = (main.variables.pieces['w_rook2'].moved == false);
                     let t5 = (target.id == '7_8');
                     let t6 = (target.id == '7_1');
-                    if (t0 && t2 && t4 && t6) {                        
+                    if (t0 && t2 && t4 && t6) {
                         let k_position = '5_1';
                         let k_target = '7_1';
                         let r_position = '8_1';
@@ -1259,7 +1380,7 @@ $(document).ready(function () {
                         $('#' + r_target).attr('chess', 'w_rook2');
                         main.methods.endturn();
                         return;
-                    } else if (t1 && t2 && t3 && t5) {                        
+                    } else if (t1 && t2 && t3 && t5) {
                         let k_position = '5_8';
                         let k_target = '7_8';
                         let r_position = '8_8';
@@ -1279,22 +1400,22 @@ $(document).ready(function () {
                         main.methods.endturn();
                         return;
                     }
-                }                
+                }
                 main.methods.move(target);
                 main.methods.endturn();
             }
             return;
-        }        
+        }
         if (main.variables.selectedpiece != '' && target.name != 'null' &&
-            target.id != selectedpiece.id && selectedpiece.name.slice(0, 1) != target.name.slice(0, 1)) {            
+            target.id != selectedpiece.id && selectedpiece.name.slice(0, 1) != target.name.slice(0, 1)) {
             if (main.variables.highlighted.indexOf(target.id) != -1) {
                 main.methods.capture(target);
                 main.methods.endturn();
             }
             return;
-        }        
+        }
         if (main.variables.selectedpiece != '' && target.name == 'null' &&
-            target.id != selectedpiece.id && selectedpiece.name.includes('pawn')) {            
+            target.id != selectedpiece.id && selectedpiece.name.includes('pawn')) {
             if (main.variables.enPassantTarget &&
                 main.variables.enPassantTarget === target.id &&
                 main.variables.highlighted.indexOf(target.id) != -1) {
@@ -1304,21 +1425,34 @@ $(document).ready(function () {
             }
         }
         if (main.variables.selectedpiece != '' && target.name != 'null' &&
-            target.id != selectedpiece.id && selectedpiece.name.slice(0, 1) == target.name.slice(0, 1)) {            
+            target.id != selectedpiece.id && selectedpiece.name.slice(0, 1) == target.name.slice(0, 1)) {
             main.methods.togglehighlight(main.variables.highlighted);
-            main.variables.highlighted = [];            
+            main.variables.highlighted = [];
             main.variables.selectedpiece = target.id;
             main.methods.moveoptions(target.name);
             return;
-        }        
+        }
         if (main.variables.selectedpiece != '' && target.id == selectedpiece.id) {
             main.methods.togglehighlight(main.variables.highlighted);
             main.variables.highlighted = [];
             main.variables.selectedpiece = '';
             return;
         }
-    });    
+    });
     $('body').contextmenu(function (e) {
         e.preventDefault();
     });
+});
+
+$('#restartBtn').click(function () {
+    main.methods.gamesetup();
+    main.variables.turn = 'w';
+    $('#turn').html("It's Whites Turn");
+    $('#turn').removeClass('turnhighlight turnheightlight check checkmate draw');
+    main.variables.gameOver = false;
+    main.variables.selectedpiece = '';
+    main.variables.highlighted = [];
+    main.methods.resetClock();
+    main.methods.updateClockDisplay();
+    main.methods.startClock();
 });
